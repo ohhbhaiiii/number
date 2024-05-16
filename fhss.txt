@@ -1,0 +1,111 @@
+//fhss
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#define SIZE 32
+#define FREQUENCY_COUNT 50
+void sender(int *dataPackets, int packets)
+{
+    int *frequencies = (int *)malloc(sizeof(int) * SIZE);
+    srand(time(NULL));
+    for (int i = 0; i < packets; i++)
+    {
+        frequencies[i] = rand() % 50;
+    }
+    printf("\nPackets to transmit are: %d\n\n", packets);
+    for (int i = 0; i < packets; i++)
+    {
+        printf("Data packet %d sent with frequency: %d\n", i + 1,
+               frequencies[i]);
+        printf("Data: %d\n", dataPackets[i]);
+    }
+}
+void receiver(int *dataPackets, int packets)
+{
+    printf("\nData received:\n");
+    for (int i = 0; i < packets; i++)
+    {
+        printf("Data packet %d: %d\n", i + 1, dataPackets[i]);
+    }
+}
+int main()
+{
+    int packets;
+    printf("Enter number of packets to send: ");
+    scanf("%d", &packets);
+    int *dataPackets = (int *)malloc(sizeof(int) * SIZE);
+    for (int i = 0; i < packets; i++)
+    {
+        printf("Enter data packet %d: ", i + 1);
+        scanf("%d", &dataPackets[i]);
+    }
+    sender(dataPackets, packets);
+    receiver(dataPackets, packets);
+    free(dataPackets);
+    return 0;
+}
+
+// dsss
+
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+char data[16] = {0};
+char key[16] = {0};
+char receiver[16] = {0};
+char temp[128] = {0};
+int keyLength, dataLength;
+
+char xnor(char a, char b) {
+    return (a == b) ? '0' : '1'; // XNOR operation
+}
+
+int checkBit(char bit[], int length) {
+    char start = bit[0];
+    for (int i = 0; i < length; i++)
+        if (bit[i] != start) // Check if any bit is different from the start bit
+            return 0;
+    return 1;
+}
+
+void calculateResultForBit(int position, char bit) {
+    printf("Performing XNOR for bit %c: ", bit);
+    int keyIndex = 0;
+    for (int i = position * keyLength; i < (position + 1) * keyLength; i++) {
+        temp[i] = xnor(bit, key[keyIndex++]);
+        printf("%c", temp[i]);
+    }
+    printf("\n");
+}
+
+char calculateBitForResult(int start, int end) {
+    if (end < start)
+        return '0'; // Return 0 if end is less than start (invalid range)
+    printf("Performing reverse operation for ");
+    for (int i = start; i < end; i++)
+        printf("%c", temp[i]);
+    printf(": ");
+    char bit = xnor(temp[start], key[0]); // Initialize bit with first xnor operation
+    printf("%c\n", bit);
+    return bit;
+}
+
+int main() {
+    printf("Enter the data to send: ");
+    scanf("%s", data);
+    printf("Enter the key: ");
+    scanf("%s", key);
+    dataLength = strlen(data);
+    keyLength = strlen(key);
+    printf("\n");
+    for (int i = 0; i < dataLength; i++) {
+        calculateResultForBit(i, data[i]);
+    }
+    printf("\nFinal string to send: %s\n\n", temp);
+    for (int i = 0; i < dataLength; i++) {
+        receiver[i] = calculateBitForResult(i * keyLength, (i + 1) * keyLength);
+    }
+    printf("\nFinal string received: %s\n", receiver);
+    return 0;
+}
